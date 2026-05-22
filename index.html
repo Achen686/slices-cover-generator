@@ -685,7 +685,7 @@ $$('.template-btn').forEach(btn => {
     $$('.template-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentTemplate = btn.dataset.template;
-    if (clips.length > 0) previewClip(previewIndex);
+    if (clips.length > 0) previewClip(previewIndex); else renderBoth();
   });
 });
 
@@ -697,7 +697,7 @@ $$('.size-btn').forEach(btn => {
     currentWidth = parseInt(btn.dataset.width);
     currentHeight = parseInt(btn.dataset.height);
     updatePreviewSize();
-    if (clips.length > 0) previewClip(previewIndex);
+    if (clips.length > 0) previewClip(previewIndex); else renderBoth();
   });
 });
 
