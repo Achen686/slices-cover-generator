@@ -12,6 +12,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cn-fontsource-ding-talk-jin-bu-ti-regular@1.0.3/font.css">
 <style>
   .font-cover { font-family: 'SimHei', 'PingFang SC', 'Microsoft YaHei', 'Heiti SC', sans-serif; }
+  @font-face {
+    font-family: 'Alimama FangYuanTi VF';
+    src: url('AlimamaFangYuanTiVF.woff2') format('woff2');
+    font-display: swap;
+  }
   .preview-container {
     width: 512px; height: 288px; overflow: hidden;
     border: 2px solid #334155; border-radius: 8px;
@@ -107,6 +112,7 @@
         <select id="font-select" class="flex-1 bg-slate-800 border border-slate-600 rounded px-1.5 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
           <option value="default">系统黑体</option>
           <option value="dingtalk">钉钉进步体</option>
+          <option value="fangyuan">阿里妈妈方圆体</option>
         </select>
         <span class="text-[11px] text-slate-500 whitespace-nowrap">蒙版</span>
         <input id="mask-opacity-slider" type="range" min="0" max="100" value="100" class="w-14 h-1.5 accent-blue-500 cursor-pointer">
@@ -232,7 +238,7 @@ const previewHint = $('#preview-hint');
 // Font: 黑体 (SimHei)
 
 function buildTemplate(type, customImage, titleOverride) {
-  const FONT = fontFamily === 'dingtalk' ? "'DingTalk JinBuTi','SimHei','PingFang SC','Microsoft YaHei',sans-serif" : "'SimHei','PingFang SC','Microsoft YaHei','Heiti SC',sans-serif";
+  const FONT = fontFamily === 'dingtalk' ? "'DingTalk JinBuTi','SimHei','PingFang SC','Microsoft YaHei',sans-serif" : fontFamily === 'fangyuan' ? "'Alimama FangYuanTi VF','SimHei','PingFang SC','Microsoft YaHei',sans-serif" : "'SimHei','PingFang SC','Microsoft YaHei','Heiti SC',sans-serif";
   const imgSrc = customImage || '';
   const title = titleOverride || '示例标题';
   const tc = titleColor;
