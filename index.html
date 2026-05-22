@@ -8,6 +8,8 @@
 <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- 钉钉进步体 (cn-fontsource CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cn-fontsource-ding-talk-jin-bu-ti-regular@1.0.3/font.css">
 <style>
   .font-cover { font-family: 'SimHei', 'PingFang SC', 'Microsoft YaHei', 'Heiti SC', sans-serif; }
   .preview-container {
@@ -119,10 +121,17 @@
           <span id="stroke-width-label" class="text-xs text-slate-400">1px</span>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 mb-2">
         <span class="text-xs text-slate-500">大小</span>
         <input id="size-slider" type="range" min="50" max="200" value="100" class="flex-1 h-1.5 accent-blue-500 cursor-pointer">
         <span id="size-label" class="text-xs text-slate-400 w-9 text-right">100%</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-500 whitespace-nowrap">字体</span>
+        <select id="font-select" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+          <option value="default">系统黑体 (默认)</option>
+          <option value="dingtalk">钉钉进步体</option>
+        </select>
       </div>
     </section>
 
@@ -212,6 +221,7 @@ let titleColor = '#ffffff';
 let fontScale = 1.0;
 let strokeColor = '#000000';
 let strokeWidth = 1;
+let fontFamily = 'default';
 let maskOpacity = 1.0;
 let localBgDataUrl = null; // uploaded local background image
 let isGenerating = false;
@@ -247,7 +257,7 @@ const previewHint = $('#preview-hint');
 // Font: 黑体 (SimHei)
 
 function buildTemplate(type, customImage, titleOverride) {
-  const FONT = "'SimHei','PingFang SC','Microsoft YaHei','Heiti SC',sans-serif";
+  const FONT = fontFamily === 'dingtalk' ? "'DingTalk JinBuTi','SimHei','PingFang SC','Microsoft YaHei',sans-serif" : "'SimHei','PingFang SC','Microsoft YaHei','Heiti SC',sans-serif";
   const imgSrc = customImage || '';
   const title = titleOverride || '示例标题';
   const tc = titleColor;
@@ -676,6 +686,12 @@ $('#apply-bg-all-btn').addEventListener('click', () => {
   renderClipList();
   if (clips.length > 0) previewClip(previewIndex);
   checkGenerateReady();
+});
+
+// Font family selector
+$('#font-select').addEventListener('change', (e) => {
+  fontFamily = e.target.value;
+  if (clips.length > 0) previewClip(previewIndex);
 });
 
 // Font settings
