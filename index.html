@@ -332,7 +332,7 @@ function previewClip(i) {
   if (i < 0 || i >= clips.length) return;
   previewIndex = i;
   const c = clips[i];
-  renderBoth(c._imageDataUrl, c.title || '未命名');
+  renderBoth(c._imageDataUrl || c.imageUrl, c.title || '未命名');
   // Update row highlights
   clipList.querySelectorAll('.clip-item').forEach((el, j) => {
     el.classList.toggle('ring-1', j === i);
