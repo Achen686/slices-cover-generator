@@ -18,22 +18,21 @@
     font-display: swap;
   }
   .preview-container {
-    width: 512px; height: 288px; overflow: hidden;
+    overflow: hidden;
     border: 2px solid #334155; border-radius: 8px;
   }
   .template-stage {
-    width: 1280px; height: 720px;
     transform: scale(0.4); transform-origin: top left;
   }
   .render-stage {
-    width: 1280px; height: 720px; overflow: hidden;
+    overflow: hidden;
     position: absolute; left: -9999px; top: 0;
   }
   .clip-row input { min-width: 0; }
   .template-btn {
     transition: all 0.15s ease;
   }
-  .template-btn.active {
+  .template-btn.active, .size-btn.active {
     border-color: #3b82f6 !important;
     background-color: #1e3a5f !important;
     box-shadow: 0 0 0 2px #3b82f6;
@@ -86,6 +85,15 @@
       <div class="flex gap-1">
         <span class="text-[9px] text-slate-600 w-7 self-center flex-shrink-0"></span>
         <button data-template="center" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">中间大字</button>
+      </div>
+    </section>
+
+    <!-- Size Selector -->
+    <section>
+      <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">尺寸选择</label>
+      <div class="flex gap-1">
+        <button data-width="1280" data-height="720" class="size-btn active flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">16:9 (1280×720)</button>
+        <button data-width="1280" data-height="960" class="size-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">4:3 (1280×960)</button>
       </div>
     </section>
 
@@ -208,7 +216,9 @@ let strokeColor = '#000000';
 let strokeWidth = 1;
 let fontFamily = 'default';
 let maskOpacity = 1.0;
-let localBgDataUrl = null; // uploaded local background image
+let localBgDataUrl = null;
+let currentWidth = 1280;
+let currentHeight = 720;
 let isGenerating = false;
 let downloadCount = parseInt(localStorage.getItem('coverDownloadCount') || '0', 10);
 
@@ -257,7 +267,7 @@ function buildTemplate(type, customImage, titleOverride) {
     ? `background-image:url(${imgSrc});background-size:cover;background-position:center;`
     : `background:#374151;`;
 
-  const wrapOpen = `<div style="width:1280px;height:720px;${bgStyle}position:relative;overflow:hidden;font-family:${FONT};">`;
+  const wrapOpen = `<div style="width:${currentWidth}px;height:${currentHeight}px;${bgStyle}position:relative;overflow:hidden;font-family:${FONT};">`;
   const placeholder = imgSrc ? '' : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:20px;z-index:0;">封面图预览区</div>`;
   const wrapClose = `</div>`;
 
@@ -573,8 +583,8 @@ async function generateAll() {
 
     // Resize canvas from 2560x1440 (scale:2) down to 1280x720 for final output
     const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = 1280;
-    finalCanvas.height = 720;
+    finalCanvas.width = currentWidth;
+    finalCanvas.height = currentHeight;
     const ctx = finalCanvas.getContext('2d');
     ctx.drawImage(canvas, 0, 0, 1280, 720);
 
@@ -625,6 +635,26 @@ async function generateAll() {
   setTimeout(() => progressContainer.classList.add('hidden'), 2000);
 }
 
+// ==================== PREVIEW SIZE ====================
+function updatePreviewSize() {
+  const scale = 512 / currentWidth;
+  const pw = Math.round(currentWidth * scale);
+  const ph = Math.round(currentHeight * scale);
+  const pc = $('#preview-wrapper');
+  if (pc) { pc.style.width = pw + 'px'; pc.style.height = ph + 'px'; }
+  [previewStage, renderStage].forEach(stage => {
+    if (stage) {
+      stage.style.width = currentWidth + 'px';
+      stage.style.height = currentHeight + 'px';
+    }
+  });
+  const sz = currentWidth + '×' + currentHeight;
+  const hs = document.querySelector('header .text-slate-500');
+  if (hs) hs.textContent = sz + ' · 6套模板 · 批量打包下载';
+  const ps = document.querySelector('main .text-slate-500');
+  if (ps) ps.textContent = '实时预览 · ' + sz + ' (缩略显示)';
+}
+
 // ==================== EVENT BINDINGS ====================
 // Template switching
 $$('.template-btn').forEach(btn => {
@@ -632,6 +662,18 @@ $$('.template-btn').forEach(btn => {
     $$('.template-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentTemplate = btn.dataset.template;
+    if (clips.length > 0) previewClip(previewIndex);
+  });
+});
+
+// Size switching
+$$('.size-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentWidth = parseInt(btn.dataset.width);
+    currentHeight = parseInt(btn.dataset.height);
+    updatePreviewSize();
     if (clips.length > 0) previewClip(previewIndex);
   });
 });
@@ -775,6 +817,7 @@ window.addEventListener("resize", updateLayoutHeight);
 
 // ==================== INIT ====================
 updateLayoutHeight();
+updatePreviewSize();
 updateDownloadCountDisplay();
 renderBoth();
 checkGenerateReady();
