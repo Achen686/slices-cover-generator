@@ -447,8 +447,12 @@ function renderClipList() {
 
 // Helper: load a URL to base64 data URL, returns dataUrl or original URL
 async function loadImageToDataUrl(url) {
+  // Try fetch with timeout
   try {
-    const resp = await fetch(url, { mode: 'cors' });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const resp = await fetch(url, { mode: 'cors', signal: ctrl.signal });
+    clearTimeout(timer);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const blob = await resp.blob();
     return new Promise((resolve) => {
@@ -458,11 +462,23 @@ async function loadImageToDataUrl(url) {
       reader.readAsDataURL(blob);
     });
   } catch {
-    // CORS fetch failed, try loading without CORS headers
+    // fetch failed or timed out — fallback: load as img + canvas to data URL
     return new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => resolve(url); // return original URL, html2canvas allowTaint handles it
-      img.onerror = () => resolve(null);
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => { img.src = ''; resolve(url); }, 8000);
+      img.onload = () => {
+        clearTimeout(timer);
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth; c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          resolve(c.toDataURL('image/jpeg', 0.92));
+        } catch {
+          resolve(url); // canvas tainted, fallback to raw URL
+        }
+      };
+      img.onerror = () => { clearTimeout(timer); resolve(null); };
       img.src = url;
     });
   }
