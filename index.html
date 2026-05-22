@@ -75,15 +75,17 @@
       <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">模板选择</label>
       <div class="flex gap-1 mb-1">
         <span class="text-[9px] text-slate-600 w-7 self-center flex-shrink-0">吸顶</span>
-        <button data-template="top-1" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">左上</button>
-        <button data-template="top-2" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">居中</button>
-        <button data-template="top-3" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">大字</button>
+        <button data-template="top-left" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">左上</button>
+        <button data-template="top-right" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">右上</button>
+      </div>
+      <div class="flex gap-1 mb-1">
+        <span class="text-[9px] text-slate-600 w-7 self-center flex-shrink-0">吸底</span>
+        <button data-template="bottom-left" class="template-btn active flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">左下</button>
+        <button data-template="bottom-right" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">右下</button>
       </div>
       <div class="flex gap-1">
-        <span class="text-[9px] text-slate-600 w-7 self-center flex-shrink-0">吸底</span>
-        <button data-template="bottom-1" class="template-btn active flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">左下</button>
-        <button data-template="bottom-2" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">居中</button>
-        <button data-template="bottom-3" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">大字</button>
+        <span class="text-[9px] text-slate-600 w-7 self-center flex-shrink-0"></span>
+        <button data-template="center" class="template-btn flex-1 py-1.5 px-1 rounded-lg border-2 border-slate-600 bg-slate-800 hover:border-blue-500 text-[11px] font-semibold">中间大字</button>
       </div>
     </section>
 
@@ -195,8 +197,8 @@ if (missingLibs.length > 0) {
 }
 
 // ==================== STATE ====================
-const ALL_TEMPLATES = ['top-1','top-2','top-3','bottom-1','bottom-2','bottom-3'];
-let currentTemplate = 'bottom-1';
+const ALL_TEMPLATES = ['top-left','top-right','bottom-left','bottom-right','center'];
+let currentTemplate = 'bottom-left';
 let clips = []; // { title, imageUrl }
 let previewIndex = 0; // which clip the preview shows
 let listExpanded = false;
@@ -236,8 +238,7 @@ const progressCount = $('#progress-count');
 const previewHint = $('#preview-hint');
 
 // ==================== TEMPLATES ====================
-// All 6 templates: cover image as full background + gradient overlay mask + title text
-// Font: 黑体 (SimHei)
+// 5 templates: 4 corner with gradient mask + 1 center large text without mask
 
 function buildTemplate(type, customImage, titleOverride) {
   const FONT = fontFamily === 'dingtalk' ? "'DingTalk JinBuTi','SimHei','PingFang SC','Microsoft YaHei',sans-serif" : fontFamily === 'fangyuan' ? "'Alimama FangYuanTi VF','SimHei','PingFang SC','Microsoft YaHei',sans-serif" : "'SimHei','PingFang SC','Microsoft YaHei','Heiti SC',sans-serif";
@@ -248,71 +249,73 @@ function buildTemplate(type, customImage, titleOverride) {
   const sw = strokeWidth;
   const sc = strokeColor;
   const ss = `-${sw}px -${sw}px 0 ${sc},${sw}px -${sw}px 0 ${sc},-${sw}px ${sw}px 0 ${sc},${sw}px ${sw}px 0 ${sc}`;
-	const mo = maskOpacity;
-	const ms = Math.min(1, mo).toFixed(2);
-	const mm = Math.min(1, 0.72 * mo).toFixed(2);
+  const mo = maskOpacity;
+  const ms = Math.min(1, mo).toFixed(2);
+  const mm = Math.min(1, 0.6 * mo).toFixed(2);
 
   const bgStyle = imgSrc
     ? `background-image:url(${imgSrc});background-size:cover;background-position:center;`
     : `background:#374151;`;
 
-  // Common wrapper: full 1280x720 with bg image
   const wrapOpen = `<div style="width:1280px;height:720px;${bgStyle}position:relative;overflow:hidden;font-family:${FONT};">`;
   const placeholder = imgSrc ? '' : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:20px;z-index:0;">封面图预览区</div>`;
   const wrapClose = `</div>`;
 
-  // ---- 吸顶模板 (蒙版在顶部) ----
-  if (type === 'top-1') {
+  const padH = 64;  // horizontal padding
+  const padV = 42;  // vertical padding from edge
+  const maskH = 220; // mask height
+
+  // Shared mask gradient
+  const maskTop = `position:absolute;top:0;left:0;right:0;height:${maskH}px;background:linear-gradient(180deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;`;
+  const maskBottom = `position:absolute;bottom:0;left:0;right:0;height:${maskH}px;background:linear-gradient(0deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;`;
+
+  const titleStyle = `color:${tc};font-size:${fs(68)}px;font-weight:900;line-height:1.2;letter-spacing:2px;text-shadow:${ss},0 2px 10px rgba(0,0,0,0.5);`;
+
+  // ---- 左上 (含蒙版) ----
+  if (type === 'top-left') {
     return `${wrapOpen}${placeholder}
-      <div style="position:absolute;top:0;left:0;right:0;height:210px;background:linear-gradient(180deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:30px;left:48px;z-index:2;max-width:1050px;">
-        <div style="color:${tc};font-size:${fs(81)}px;font-weight:900;line-height:1.25;letter-spacing:2px;text-shadow:${ss},0 2px 8px rgba(0,0,0,0.5);" id="tmpl-title">${title}</div>
+      <div style="${maskTop}"></div>
+      <div style="position:absolute;top:${padV}px;left:${padH}px;z-index:2;max-width:1150px;">
+        <div style="${titleStyle}" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
   }
 
-  if (type === 'top-2') {
+  // ---- 右上 (含蒙版) ----
+  if (type === 'top-right') {
     return `${wrapOpen}${placeholder}
-      <div style="position:absolute;top:0;left:0;right:0;height:225px;background:linear-gradient(180deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:0;left:0;right:0;height:225px;z-index:2;display:flex;align-items:center;justify-content:center;">
-        <div style="color:${tc};font-size:${fs(84)}px;font-weight:900;line-height:1.25;letter-spacing:3px;text-shadow:${ss},0 2px 10px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
+      <div style="${maskTop}"></div>
+      <div style="position:absolute;top:${padV}px;right:${padH}px;z-index:2;max-width:1150px;text-align:right;">
+        <div style="${titleStyle}" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
   }
 
-  if (type === 'top-3') {
+  // ---- 左下 (含蒙版) ----
+  if (type === 'bottom-left') {
     return `${wrapOpen}${placeholder}
-      <div style="position:absolute;top:0;left:0;right:0;height:255px;background:linear-gradient(180deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:0;left:0;right:0;height:255px;z-index:2;display:flex;align-items:center;justify-content:center;">
-        <div style="color:${tc};font-size:${fs(108)}px;font-weight:900;line-height:1.15;letter-spacing:4px;text-shadow:${ss},0 3px 12px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
+      <div style="${maskBottom}"></div>
+      <div style="position:absolute;bottom:${padV}px;left:${padH}px;z-index:2;max-width:1150px;">
+        <div style="${titleStyle}" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
   }
 
-  // ---- 吸底模板 (蒙版在底部) ----
-  if (type === 'bottom-1') {
+  // ---- 右下 (含蒙版) ----
+  if (type === 'bottom-right') {
     return `${wrapOpen}${placeholder}
-      <div style="position:absolute;bottom:0;left:0;right:0;height:210px;background:linear-gradient(0deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;bottom:46px;left:48px;z-index:2;max-width:1050px;">
-        <div style="color:${tc};font-size:${fs(81)}px;font-weight:900;line-height:1.25;letter-spacing:2px;text-shadow:${ss},0 2px 8px rgba(0,0,0,0.5);" id="tmpl-title">${title}</div>
+      <div style="${maskBottom}"></div>
+      <div style="position:absolute;bottom:${padV}px;right:${padH}px;z-index:2;max-width:1150px;text-align:right;">
+        <div style="${titleStyle}" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
   }
 
-  if (type === 'bottom-2') {
+  // ---- 中间大字 (无蒙版) ----
+  if (type === 'center') {
     return `${wrapOpen}${placeholder}
-      <div style="position:absolute;bottom:0;left:0;right:0;height:225px;background:linear-gradient(0deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;bottom:0;left:0;right:0;height:225px;z-index:2;display:flex;align-items:center;justify-content:center;">
-        <div style="color:${tc};font-size:${fs(84)}px;font-weight:900;line-height:1.25;letter-spacing:3px;text-shadow:${ss},0 2px 10px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
-      </div>
-      ${wrapClose}`;
-  }
-
-  if (type === 'bottom-3') {
-    return `${wrapOpen}${placeholder}
-      <div style="position:absolute;bottom:0;left:0;right:0;height:255px;background:linear-gradient(0deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;bottom:0;left:0;right:0;height:255px;z-index:2;display:flex;align-items:center;justify-content:center;">
-        <div style="color:${tc};font-size:${fs(108)}px;font-weight:900;line-height:1.15;letter-spacing:4px;text-shadow:${ss},0 3px 12px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
+      <div style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;">
+        <div style="color:${tc};font-size:${fs(100)}px;font-weight:900;line-height:1.2;letter-spacing:4px;text-shadow:${ss},0 4px 16px rgba(0,0,0,0.7);text-align:center;max-width:1100px;" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
   }
