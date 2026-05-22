@@ -60,6 +60,8 @@
   </div>
 </header>
 
+<div id="js-error-banner" class="bg-red-700 text-white text-xs px-4 py-1 text-center hidden"></div>
+
 <!-- Hidden render stage for html2canvas capture at full resolution -->
 <div id="render-stage" class="render-stage"></div>
 
@@ -194,6 +196,10 @@
 </div>
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  var el = document.getElementById('js-error-banner');
+  if (el) { el.className = 'bg-red-700 text-white text-xs px-4 py-1 text-center'; el.innerHTML = 'JS 错误: ' + msg + ' (行 ' + line + ')'; }
+};
 document.addEventListener('DOMContentLoaded', () => {
 // ==================== CDN CHECK ====================
 const missingLibs = [];
