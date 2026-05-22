@@ -274,7 +274,7 @@ function buildTemplate(type, customImage, titleOverride) {
   if (type === 'top-2') {
     return `${wrapOpen}${placeholder}
       <div style="position:absolute;top:0;left:0;right:0;height:225px;background:linear-gradient(180deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;top:0;left:0;right:0;height:225px;z-index:2;display:flex;align-items:center;justify-content:center;">
         <div style="color:${tc};font-size:${fs(84)}px;font-weight:900;line-height:1.25;letter-spacing:3px;text-shadow:${ss},0 2px 10px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
@@ -283,7 +283,7 @@ function buildTemplate(type, customImage, titleOverride) {
   if (type === 'top-3') {
     return `${wrapOpen}${placeholder}
       <div style="position:absolute;top:0;left:0;right:0;height:255px;background:linear-gradient(180deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;top:0;left:0;right:0;height:255px;z-index:2;display:flex;align-items:center;justify-content:center;">
         <div style="color:${tc};font-size:${fs(108)}px;font-weight:900;line-height:1.15;letter-spacing:4px;text-shadow:${ss},0 3px 12px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
@@ -302,7 +302,7 @@ function buildTemplate(type, customImage, titleOverride) {
   if (type === 'bottom-2') {
     return `${wrapOpen}${placeholder}
       <div style="position:absolute;bottom:0;left:0;right:0;height:225px;background:linear-gradient(0deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;bottom:0;left:0;right:0;height:225px;z-index:2;display:flex;align-items:center;justify-content:center;">
         <div style="color:${tc};font-size:${fs(84)}px;font-weight:900;line-height:1.25;letter-spacing:3px;text-shadow:${ss},0 2px 10px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
@@ -311,7 +311,7 @@ function buildTemplate(type, customImage, titleOverride) {
   if (type === 'bottom-3') {
     return `${wrapOpen}${placeholder}
       <div style="position:absolute;bottom:0;left:0;right:0;height:255px;background:linear-gradient(0deg,rgba(0,0,0,${ms}) 0%,rgba(0,0,0,${mm}) 50%,transparent 100%);z-index:1;"></div>
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;">
+      <div style="position:absolute;bottom:0;left:0;right:0;height:255px;z-index:2;display:flex;align-items:center;justify-content:center;">
         <div style="color:${tc};font-size:${fs(108)}px;font-weight:900;line-height:1.15;letter-spacing:4px;text-shadow:${ss},0 3px 12px rgba(0,0,0,0.5);text-align:center;max-width:1050px;" id="tmpl-title">${title}</div>
       </div>
       ${wrapClose}`;
