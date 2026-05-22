@@ -135,13 +135,14 @@
       </div>
 
       <!-- Local background image -->
-      <div class="flex gap-2 mb-2">
-        <label class="flex-1 flex items-center justify-center gap-1 bg-slate-800 border border-dashed border-slate-600 rounded-lg px-2 py-2 cursor-pointer hover:border-amber-500 transition text-xs text-slate-400">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span id="bg-upload-label">上传本地底图</span>
+      <div class="flex gap-1.5 mb-2">
+        <label class="flex-1 flex items-center gap-1 bg-slate-800 border border-dashed border-slate-600 rounded-lg px-2 py-1.5 cursor-pointer hover:border-amber-500 transition text-xs text-slate-400 min-w-0">
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span id="bg-upload-label" class="truncate">上传本地底图</span>
           <input id="bg-image-input" type="file" accept="image/*" class="hidden">
         </label>
-        <button id="apply-bg-all-btn" class="flex-1 bg-amber-700 hover:bg-amber-600 border border-amber-600 text-white font-semibold py-2 rounded-lg text-xs transition disabled:opacity-30 disabled:cursor-not-allowed" disabled>应用为所有底图</button>
+        <button id="reupload-btn" class="text-[11px] text-slate-500 hover:text-slate-300 underline transition hidden flex-shrink-0">重新上传</button>
+        <button id="apply-bg-all-btn" class="bg-amber-700 hover:bg-amber-600 border border-amber-600 text-white font-semibold py-1.5 px-2 rounded-lg text-[11px] transition disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap" disabled>应用为所有</button>
       </div>
 
       <div id="clip-list" class="space-y-1 pr-1 min-h-[60px]" tabindex="0">
@@ -666,17 +667,27 @@ async function autoLoadAllImages() {
 }
 
 // Local background image upload
-$('#bg-image-input').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
+function handleBgFile(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     localBgDataUrl = reader.result;
-    $('#bg-upload-label').textContent = file.name;
+    const name = file.name;
+    $('#bg-upload-label').textContent = name.length > 18 ? name.slice(0, 15) + '...' : name;
+    $('#bg-upload-label').classList.remove('text-slate-400');
+    $('#bg-upload-label').classList.add('text-amber-400');
     $('#apply-bg-all-btn').disabled = false;
+    $('#reupload-btn').classList.remove('hidden');
   };
   reader.readAsDataURL(file);
+}
+$('#bg-image-input').addEventListener('change', (e) => {
+  handleBgFile(e.target.files[0]);
   e.target.value = '';
+});
+$('#reupload-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('#bg-image-input').click();
 });
 
 // Apply local background to all clips
