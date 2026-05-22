@@ -597,12 +597,12 @@ async function generateAll() {
       backgroundColor: null,
     });
 
-    // Resize canvas from 2560x1440 (scale:2) down to 1280x720 for final output
+    // Resize canvas from 2x scale down to target size for final output
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = currentWidth;
     finalCanvas.height = currentHeight;
     const ctx = finalCanvas.getContext('2d');
-    ctx.drawImage(canvas, 0, 0, 1280, 720);
+    ctx.drawImage(canvas, 0, 0, currentWidth, currentHeight);
 
     const blob = await new Promise(resolve => finalCanvas.toBlob(resolve, 'image/png'));
     zip.file(`${i + 1}-${clip.title}.png`, blob);
