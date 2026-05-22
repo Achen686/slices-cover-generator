@@ -198,6 +198,7 @@ const ALL_TEMPLATES = ['top-1','top-2','top-3','bottom-1','bottom-2','bottom-3']
 let currentTemplate = 'bottom-1';
 let clips = []; // { title, imageUrl }
 let previewIndex = 0; // which clip the preview shows
+let listExpanded = false;
 let titleColor = '#ffffff';
 let fontScale = 1.0;
 let strokeColor = '#000000';
@@ -356,21 +357,29 @@ function renderClipList() {
     previewHint.classList.remove('hidden');
     updateTitle(null);
   } else {
-    clipList.innerHTML = clips.map((c, i) => {
+    const collapsed = !listExpanded && clips.length > 3;
+    const visible = collapsed ? clips.slice(0, 3) : clips;
+    const hiddenCount = clips.length - 3;
+
+    clipList.innerHTML = visible.map((c, i) => {
+      const realIndex = collapsed ? i : i;
       return `
-      <div class="clip-item flex items-center gap-1.5 rounded-lg px-2 py-1.5 group cursor-pointer ${i === previewIndex ? 'bg-slate-700 ring-1 ring-blue-500' : 'bg-slate-800'}" data-preview="${i}">
-        <span class="text-xs text-slate-500 w-7 text-center font-mono flex-shrink-0">${String(i + 1).padStart(2, '0')}</span>
-        <input value="${escapeHtml(c.title)}" data-index="${i}" data-field="title"
+      <div class="clip-item flex items-center gap-1.5 rounded-lg px-2 py-1.5 group cursor-pointer ${realIndex === previewIndex ? 'bg-slate-700 ring-1 ring-blue-500' : 'bg-slate-800'}" data-preview="${realIndex}">
+        <span class="text-xs text-slate-500 w-7 text-center font-mono flex-shrink-0">${String(realIndex + 1).padStart(2, '0')}</span>
+        <input value="${escapeHtml(c.title)}" data-index="${realIndex}" data-field="title"
                class="flex-1 min-w-0 bg-transparent text-sm text-slate-200 focus:outline-none border-b border-transparent focus:border-blue-500 py-0.5 transition"
                placeholder="标题">
-        <input value="${escapeHtml(c.imageUrl || '')}" data-index="${i}" data-field="imageUrl"
+        <input value="${escapeHtml(c.imageUrl || '')}" data-index="${realIndex}" data-field="imageUrl"
                class="flex-1 min-w-0 bg-transparent text-xs text-slate-400 focus:outline-none border-b border-transparent focus:border-blue-500 py-0.5 transition"
                placeholder="封面图URL">
-        <button data-remove="${i}" class="flex-shrink-0 text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-lg leading-none" title="删除">&times;</button>
+        <button data-remove="${realIndex}" class="flex-shrink-0 text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-lg leading-none" title="删除">&times;</button>
       </div>`;
-    }).join('');
+    }).join('') + (collapsed ? `
+      <button id="expand-list-btn" class="w-full text-center text-xs text-slate-400 hover:text-blue-400 py-2 transition">
+        展开更多 (${hiddenCount})
+      </button>` : '');
 
-    // Bind events
+    // Bind expand button
     clipList.querySelectorAll('.clip-item').forEach(row => {
       row.addEventListener('click', (e) => {
         // Don't switch preview if clicking on input or button
@@ -409,6 +418,14 @@ function renderClipList() {
         checkGenerateReady();
       });
     });
+
+    const expandBtn = clipList.querySelector('#expand-list-btn');
+    if (expandBtn) {
+      expandBtn.addEventListener('click', () => {
+        listExpanded = true;
+        renderClipList();
+      });
+    }
 
     if (clips.length > 0) previewClip(previewIndex);
   }
@@ -499,6 +516,7 @@ function importExcel(file) {
         title: String(r[0] || '').trim(),
         imageUrl: String(r[1] || '').trim(),
       }));
+      listExpanded = false;
       renderClipList();
       checkGenerateReady();
       autoLoadAllImages();
