@@ -5,10 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>切片封面图生成器</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   .font-cover { font-family: 'SimHei', 'PingFang SC', 'Microsoft YaHei', 'Heiti SC', sans-serif; }
   .preview-container {
@@ -182,6 +181,17 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+// ==================== CDN CHECK ====================
+const missingLibs = [];
+if (typeof XLSX === 'undefined') missingLibs.push('XLSX (Excel)');
+if (typeof JSZip === 'undefined') missingLibs.push('JSZip (ZIP)');
+if (typeof html2canvas === 'undefined') missingLibs.push('html2canvas (截图)');
+if (missingLibs.length > 0) {
+  document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#f1f5f9;font-family:sans-serif;"><div style="text-align:center;max-width:420px;padding:24px;"><h1 style="font-size:24px;margin-bottom:16px;">组件加载失败</h1><p style="color:#94a3b8;margin-bottom:8px;">以下组件未能加载：${missingLibs.join('、')}</p><p style="color:#94a3b8;margin-bottom:16px;">可能原因：网络连接不稳定或 CDN 资源不可用。</p><button onclick="location.reload()" style="background:#3b82f6;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:16px;">刷新重试</button></div></div>`;
+  return;
+}
+
 // ==================== STATE ====================
 const ALL_TEMPLATES = ['top-1','top-2','top-3','bottom-1','bottom-2','bottom-3'];
 let currentTemplate = 'bottom-1';
@@ -433,31 +443,55 @@ function checkGenerateReady() {
 
 // ==================== EXCEL ====================
 function downloadExcelTemplate() {
-  const ws = XLSX.utils.aoa_to_sheet([
-    ['切片标题', '封面图URL'],
-    ['外观解析', 'https://example.com/cover1.jpg'],
-    ['内饰详解', 'https://example.com/cover2.jpg'],
-  ]);
-  ws['!cols'] = [{wch: 24}, {wch: 44}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '切片封面');
-  XLSX.writeFile(wb, '切片封面模板.xlsx');
+  if (typeof XLSX === 'undefined') {
+    alert('Excel 组件加载失败，请刷新页面后重试。');
+    return;
+  }
+  try {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['切片标题', '封面图URL'],
+      ['外观解析', 'https://example.com/cover1.jpg'],
+      ['内饰详解', 'https://example.com/cover2.jpg'],
+    ]);
+    ws['!cols'] = [{wch: 24}, {wch: 44}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '切片封面');
+    XLSX.writeFile(wb, '切片封面模板.xlsx');
+  } catch (err) {
+    console.error('下载模板失败:', err);
+    alert('下载模板失败，请稍后重试。');
+  }
 }
 
 function importExcel(file) {
+  if (typeof XLSX === 'undefined') {
+    alert('Excel 组件加载失败，请刷新页面后重试。');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = (e) => {
-    const wb = XLSX.read(e.target.result, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-    const rows = data.slice(1).filter(r => r[0] && String(r[0]).trim());
-    if (rows.length === 0) return;
-    clips = rows.map((r) => ({
-      title: String(r[0] || '').trim(),
-      imageUrl: String(r[1] || '').trim(),
-    }));
-    renderClipList();
-    checkGenerateReady();
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const rows = data.slice(1).filter(r => r[0] && String(r[0]).trim());
+      if (rows.length === 0) {
+        alert('未在 Excel 中找到有效数据，请检查文件内容。');
+        return;
+      }
+      clips = rows.map((r) => ({
+        title: String(r[0] || '').trim(),
+        imageUrl: String(r[1] || '').trim(),
+      }));
+      renderClipList();
+      checkGenerateReady();
+    } catch (err) {
+      console.error('导入 Excel 失败:', err);
+      alert('导入失败，请检查文件格式是否正确。');
+    }
+  };
+  reader.onerror = () => {
+    alert('文件读取失败，请重试。');
   };
   reader.readAsArrayBuffer(file);
 }
@@ -665,6 +699,7 @@ $('#reset-count-btn').addEventListener('click', () => {
 updateDownloadCountDisplay();
 renderBoth();
 checkGenerateReady();
+});
 </script>
 </body>
 </html>
