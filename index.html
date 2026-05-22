@@ -140,6 +140,16 @@
         <button id="download-template-btn" class="text-[11px] text-slate-500 hover:text-slate-300 underline transition">下载 Excel 模板</button>
       </div>
 
+      <!-- Local background image -->
+      <div class="flex gap-2 mb-2">
+        <label class="flex-1 flex items-center justify-center gap-1 bg-slate-800 border border-dashed border-slate-600 rounded-lg px-2 py-2 cursor-pointer hover:border-amber-500 transition text-xs text-slate-400">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span id="bg-upload-label">上传本地底图</span>
+          <input id="bg-image-input" type="file" accept="image/*" class="hidden">
+        </label>
+        <button id="apply-bg-all-btn" class="flex-1 bg-amber-700 hover:bg-amber-600 border border-amber-600 text-white font-semibold py-2 rounded-lg text-xs transition disabled:opacity-30 disabled:cursor-not-allowed" disabled>应用为所有底图</button>
+      </div>
+
       <div id="clip-list" class="flex-1 overflow-y-auto space-y-1 pr-1 min-h-[120px]" tabindex="0">
         <!-- Dynamically populated -->
       </div>
@@ -202,6 +212,7 @@ let fontScale = 1.0;
 let strokeColor = '#000000';
 let strokeWidth = 1;
 let maskOpacity = 1.0;
+let localBgDataUrl = null; // uploaded local background image
 let isGenerating = false;
 let downloadCount = parseInt(localStorage.getItem('coverDownloadCount') || '0', 10);
 
@@ -639,6 +650,31 @@ $('#load-all-btn').addEventListener('click', async () => {
   btn.textContent = '一键加载全部封面';
   btn.className = 'mt-2 w-full bg-green-700 hover:bg-green-600 border border-green-600 text-white font-semibold py-2.5 rounded-lg text-sm transition';
   btn.disabled = false;
+});
+
+// Local background image upload
+$('#bg-image-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    localBgDataUrl = reader.result;
+    $('#bg-upload-label').textContent = file.name;
+    $('#apply-bg-all-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+// Apply local background to all clips
+$('#apply-bg-all-btn').addEventListener('click', () => {
+  if (!localBgDataUrl || clips.length === 0) return;
+  for (const clip of clips) {
+    clip._imageDataUrl = localBgDataUrl;
+  }
+  renderClipList();
+  if (clips.length > 0) previewClip(previewIndex);
+  checkGenerateReady();
 });
 
 // Font settings
